@@ -5,15 +5,14 @@
 #include <unistd.h>
 #include <math.h>
 
-int get_sample();
 void end_program();
 void init(char**);
 void run();
-int get_sample();
+useconds_t get_sample();
 void end_program();
 
 int samples, duration;
-int* intervals;
+useconds_t* intervals;
 useconds_t dt;
 struct timeval start;
 
@@ -31,9 +30,9 @@ int main(int argc, char **argv) {
 void init(char **argv) {
     duration = atoi(argv[1]);
     float interval = atof(argv[2]);
-    int count = (int) (duration/interval);
+    int count = (useconds_t) (duration/interval);
     // allocate memory for storing the interval values
-    intervals = (int*) malloc(count * sizeof(int));
+    intervals = (useconds_t*) malloc(count * sizeof(useconds_t));
     dt = (useconds_t) (atof(argv[2]) * pow(10, 6));
 }
 
@@ -49,7 +48,7 @@ void run() {
     }
 }
 
-int get_sample() {
+useconds_t get_sample() {
     struct timeval tv;
     gettimeofday(&tv, NULL);
     useconds_t delta = (tv.tv_sec - start.tv_sec) * pow(10, 6) + tv.tv_usec - start.tv_usec;
