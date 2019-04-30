@@ -58,10 +58,19 @@ int get_sample() {
 }
 
 void end_program() {
+    printf("Writing results to file...\n");
+    FILE *fptr;
+    fptr = fopen("../log/sampling_a.csv","w");
+    if (fptr == NULL){
+     printf("Something went wrong\n");
+     _exit(1);
+    }
+    fprintf(fptr, "sample,interval,duration\n");
     float sum = 0;
     for(int j = 0; j < samples; j++) {
         sum += intervals[j] / pow(10, 6);
-        fprintf(stdout, "%d\t%d\t%f\n", j, intervals[j], sum);
+        fprintf(fptr, "%d,%d,%f\n", j, intervals[j], sum);
     }
+    fclose(fptr);
     exit(0);
 }

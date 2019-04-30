@@ -14,7 +14,7 @@ MKDIR = mkdir -p
 SRC = src
 BIN = bin
 OBJ = obj
-DIRS = src bin obj
+DIRS = src bin obj log
 
 # ==================================================
 # TARGETS
@@ -41,7 +41,7 @@ $(OBJ)/%.o: $(SRC)/%.c
 	$(CC) -c -o $@ $^
 
 clean:
-	$(RM) $(OBJ)/*.o
+	$(RM) $(OBJ)/*.o log/*
 
 purge: clean
 	$(RM) $(addprefix $(BIN)/, $(EXEC))
