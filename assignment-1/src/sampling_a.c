@@ -1,23 +1,67 @@
 #include <sys/time.h>
 #include <stdio.h>
+#include <signal.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <math.h>
 
-unsigned long get_time();
+int get_sample();
+void end_program();
+void init(char**);
+void run();
+int get_sample();
+void end_program();
 
-int main(int nargs, char **args) {
-        fprintf (stdout, "The current epoch time / ms: %ld\n", get_time());
-        long start_time = get_time();
-        int i;
-        for (i = 0; i < 1e8; ++i);
-        fprintf (stdout, "It took %ld ms to count to 10^8.\n", \
-                        get_time() - start_time);
+int samples, duration;
+int* intervals;
+useconds_t dt;
+struct timeval start;
+
+
+int main(int argc, char **argv) {
+    if (argc != 3) {
+        fprintf(stdout, "Not enough arguments given\n");
         return 0;
+    }
+    signal(SIGALRM, end_program);
+    init(argv);
+    run();
 }
 
-unsigned long get_time() {
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-        unsigned long ret = tv.tv_usec;
-        ret /= 1000;
-        ret += (tv.tv_sec * 1000);
-        return ret;
+void init(char **argv) {
+    duration = atoi(argv[1]);
+    float interval = atof(argv[2]);
+    int count = (int) (duration/interval);
+    // allocate memory for storing the interval values
+    intervals = (int*) malloc(count * sizeof(int));
+    dt = (useconds_t) (atof(argv[2]) * pow(10, 6));
+}
+
+void run() {
+    // starting time
+    gettimeofday(&start, NULL);
+    samples = 0;
+    // set alarm to know when to exit the sampling procedure
+    alarm(duration);
+    while (1){
+        usleep(dt);
+        intervals[samples++] = get_sample();        
+    }
+}
+
+int get_sample() {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    useconds_t delta = (tv.tv_sec - start.tv_sec) * pow(10, 6) + tv.tv_usec - start.tv_usec;
+    start = tv;
+    return delta;
+}
+
+void end_program() {
+    float sum = 0;
+    for(int j = 0; j < samples; j++) {
+        sum += intervals[j] / pow(10, 6);
+        fprintf(stdout, "%d\t%d\t%f\n", j, intervals[j], sum);
+    }
+    exit(0);
 }
