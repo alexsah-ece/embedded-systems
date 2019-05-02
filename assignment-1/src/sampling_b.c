@@ -43,8 +43,10 @@ void run() {
     delta = dt;
     // set alarm to know when to exit the sampling procedure
     alarm(duration);
+    useconds_t sleep_interval;
     while (1){
-        usleep(2 * dt - delta);
+        sleep_interval = (delta < dt) ? dt : (2 * dt - delta);
+        usleep(sleep_interval);
         intervals[samples++] = get_sample();        
     }
 }
