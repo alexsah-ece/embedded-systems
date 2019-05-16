@@ -73,6 +73,7 @@ void end_program() {
         sum += intervals[j] / pow(10, 6);
         fprintf(fptr, "%d,%d,%f\n", j, intervals[j], sum);
     }
+    free(intervals);
     fclose(fptr);
     exit(0);
 }
