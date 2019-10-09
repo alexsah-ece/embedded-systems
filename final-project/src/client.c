@@ -5,7 +5,7 @@ void *client(void *param){
     struct sockaddr_in serv_addr; 
 
     serv_addr.sin_family = AF_INET; 
-    serv_addr.sin_port = htons(PORT); 
+    serv_addr.sin_port = htons(CLIENT_SENT_PORT); 
     
 	int j=0;
 	while (j<ip_count){
@@ -16,16 +16,16 @@ void *client(void *param){
 			pthread_exit(NULL); 
 		} 
 		// Convert IPv4 and IPv6 addresses from text to binary form 
-		if(inet_pton(AF_INET, IPs[j], &serv_addr.sin_addr)<=0)  
+		if(inet_pton(AF_INET, ip_addresses[j], &serv_addr.sin_addr)<=0)  
 		{ 
 			printf("CLIENT:\tInvalid address/ Address not supported \n"); 
 		} 
 		
 		if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
-			printf("CLIENT:\tConnection Failed with IP %s\n", IPs[j]);
+			printf("CLIENT:\tConnection Failed with IP %s\n", ip_addresses[j]);
 		} 
 		else {
-			sendMsgs(sock, j);			
+			send_messages(sock, j);			
 
 		}
 		close(sock);
@@ -39,9 +39,9 @@ void *client(void *param){
 	return NULL;
 }
 
-void sendMsgs(int sock, int receiver){
-	int last_msg_sent_index = IPsLastMsgSentIndex[receiver];
-	char *last_msg_sent = IPsLastMsgSent[receiver];
+void send_messages(int sock, int receiver){
+	int last_msg_index = last_msg_sent_index[receiver];
+	char *last_msg = last_msg_sent[receiver];
 
 	int endIndex = count;
 	if(endIndex >= BUFFLENGTH){
@@ -49,30 +49,30 @@ void sendMsgs(int sock, int receiver){
 	}
 	char ack[3];
 
-	if((last_msg_sent_index != endIndex) || (strcmp(last_msg_sent, buff[endIndex]) != 0)){
+	if((last_msg_index != endIndex) || (strcmp(last_msg, buff[endIndex]) != 0)){
 		do {
-			last_msg_sent_index++;
-			if(last_msg_sent_index >= BUFFLENGTH){
-				last_msg_sent_index = 0;
+			last_msg_index++;
+			if(last_msg_index >= BUFFLENGTH){
+				last_msg_index = 0;
 			}
 
-			if (send(sock, buff[last_msg_sent_index], strlen(buff[last_msg_sent_index])+1, 0) == -1){
+			if (send(sock, buff[last_msg_index], strlen(buff[last_msg_index])+1, 0) == -1){
 				break;
 			};
 			recv(sock, ack,sizeof(ack),0);
 
-			last_msg_sent = buff[last_msg_sent_index];
+			last_msg = buff[last_msg_index];
 			
-		} while (last_msg_sent_index != endIndex);
+		} while (last_msg_index != endIndex);
 		send(sock, "Exit", strlen("Exit") + 1, 0);
-		IPsLastMsgSentIndex[receiver] = last_msg_sent_index;
-		strcpy(IPsLastMsgSent[receiver], last_msg_sent);
+		last_msg_sent_index[receiver] = last_msg_index;
+		strcpy(last_msg_sent[receiver], last_msg);
 	} else {
 		printf("CLIENT:\tNo need of new messages\n");
 	}
 }
 
-void produceMsg(int sig){
+void produce_msg(int sig){
 	
 	// avoid deadlock on alarm
 	if (pthread_mutex_trylock(&buffer_mutex) != 0){
@@ -86,12 +86,12 @@ void produceMsg(int sig){
 	sprintf(
 		message, 
 		"%d_%d_%d_%s",
-		sender, IPsToAEMs[rand() % ip_count], (unsigned)time(NULL), messageList[rand() % message_count]
+		sender, ip_to_aem[rand() % ip_count], (unsigned)time(NULL), message_list[rand() % message_count]
 	);
 
 	if (count >= BUFFLENGTH){
 		count = 0;
-		fullBuffer = 1;
+		is_buffer_full = 1;
 	}
 
 	strcpy(buff[count++], message);

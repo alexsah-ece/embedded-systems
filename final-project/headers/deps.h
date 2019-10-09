@@ -21,7 +21,6 @@
 #include <pthread.h>
 
 
-#define PORT 2288
 #define SENDER 8906
 #define MAX_MSG_LENGTH 278
 #define BUFFLENGTH 2000
@@ -29,19 +28,19 @@
 
 
 
-char **IPs;
+char **ip_addresses;
 int ip_count;
 
-int *IPsLastMsgSentIndex;
-char **IPsLastMsgSent;
-int *IPsToAEMs;
+int *last_msg_sent_index;
+char **last_msg_sent;
+int *ip_to_aem;
 
-char **messageList;
+char **message_list;
 int message_count;
 
 char buff[BUFFLENGTH][MAX_MSG_LENGTH];
 int count;
-int fullBuffer;
+int is_buffer_full;
 
 char log_buffer[LOG_BATCH_SIZE][MAX_MSG_LENGTH];
 int curr_log_count;

@@ -7,6 +7,6 @@
 void initialize_vars(void);
 void initialize_addresses(char *file);
 void initialize_messages(char *file);
-void catch_int_term(int signal);
+void int_term_handler(int signal);
 
 #endif

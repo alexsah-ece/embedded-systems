@@ -14,7 +14,7 @@ void server(void){
 	
 	address.sin_family = AF_INET; 
     address.sin_addr.s_addr = INADDR_ANY; 
-    address.sin_port = htons( PORT ); 
+    address.sin_port = htons(SERVER_LISTEN_PORT); 
 	
 	// reuse address and port options
     if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, 
@@ -70,10 +70,10 @@ void *receiveMsg(void *newfd){
 		doubleMsg=0;
 		if (count>=BUFFLENGTH){
 			count=0;
-			fullBuffer=1;
+			is_buffer_full=1;
 		}
 		
-		if (fullBuffer==0) {
+		if (is_buffer_full==0) {
 			endIndex=count;
 		}
 		else {

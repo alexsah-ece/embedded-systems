@@ -10,19 +10,19 @@ int main(int argc, char *argv[]){
 		exit(-1);
 	}
 
-	// populate IPs and messageList
+	// populate ip_addresses and message_list
 	initialize_vars();
 	initialize_addresses(argv[1]);
 	initialize_messages(argv[2]);
 	
 	printf("MAIN:\tSetting up sig handlers...\n");
-	signal(SIGALRM, produceMsg);
-	signal(SIGTERM, catch_int_term);
-	signal(SIGINT, catch_int_term);
+	signal(SIGALRM, produce_msg);
+	signal(SIGTERM, int_term_handler);
+	signal(SIGINT, int_term_handler);
 	srand(time(NULL));
 
 	printf("MAIN:\tIniatilizing buffer...\n");
-	produceMsg(0);
+	produce_msg(0);
 
 	pthread_t clientThread;	
 	pthread_create(&clientThread, NULL, client, NULL);
@@ -33,29 +33,29 @@ int main(int argc, char *argv[]){
 	return 0;
 }
 
-void catch_int_term(int signal){
+void int_term_handler(int signal){
 	printf("INT signal ...\n");
 	logger("", 1);
 	for(int i = 0; i < message_count; i++){
-		free(messageList[i]);
+		free(message_list[i]);
 	}
-	free(messageList);
+	free(message_list);
 
 	for(int i = 0; i < ip_count; i++){
-		free(IPs[i]);
-		// free(IPsLastMsgSentIndex[i]);
+		free(ip_addresses[i]);
+		// free(last_msg_sent_index[i]);
 	}
-	free(IPs);
-	free(IPsToAEMs);
-	free(IPsLastMsgSent);
-	free(IPsLastMsgSentIndex);
+	free(ip_addresses);
+	free(ip_to_aem);
+	free(last_msg_sent);
+	free(last_msg_sent_index);
 	exit(1);
 }
 
 
 void initialize_vars(){
 	count=0;
-	fullBuffer=0;
+	is_buffer_full=0;
 	curr_log_count = 0;
 	pthread_mutex_init(&buffer_mutex, NULL);
 	pthread_mutex_init(&fd_mutex, NULL);
@@ -68,19 +68,19 @@ void initialize_addresses(char *file){
 	fp = fopen(file, "r");
 	
 	fscanf(fp, "%d\n", &ip_count);
-	IPsLastMsgSentIndex = (int *)malloc(ip_count * sizeof(int));
-	IPsToAEMs =(int *)malloc(ip_count * sizeof(int));  
+	last_msg_sent_index = (int *)malloc(ip_count * sizeof(int));
+	ip_to_aem =(int *)malloc(ip_count * sizeof(int));  
 
-	IPs = (char **)malloc(ip_count * sizeof(char *)); 
-	IPsLastMsgSent = (char **)malloc(ip_count * sizeof(char *));
+	ip_addresses = (char **)malloc(ip_count * sizeof(char *)); 
+	last_msg_sent = (char **)malloc(ip_count * sizeof(char *));
 
     for (i = 0; i < ip_count; i++){
-		IPsLastMsgSentIndex[i] = -1;
-        IPsLastMsgSent[i] = (char *)malloc(MAX_MSG_LENGTH * sizeof(char));
-        strcpy(IPsLastMsgSent[i], "null");
-		IPs[i] = (char *)malloc(50 * sizeof(char));
-		fscanf(fp, "%s %d\n", IPs[i], &IPsToAEMs[i]);
-		IPs[i][strcspn(IPs[i], "\n")] = '\0';
+		last_msg_sent_index[i] = -1;
+        last_msg_sent[i] = (char *)malloc(MAX_MSG_LENGTH * sizeof(char));
+        strcpy(last_msg_sent[i], "null");
+		ip_addresses[i] = (char *)malloc(50 * sizeof(char));
+		fscanf(fp, "%s %d\n", ip_addresses[i], &ip_to_aem[i]);
+		ip_addresses[i][strcspn(ip_addresses[i], "\n")] = '\0';
 
 	} 
 	fclose(fp);
@@ -93,25 +93,25 @@ void initialize_messages(char *file){
 	fp = fopen(file, "r");
 	
 	fscanf(fp, "%d\n", &message_count);
-	messageList = (char **)malloc(message_count * sizeof(char *)); 
+	message_list = (char **)malloc(message_count * sizeof(char *)); 
 
     for (i = 0; i < message_count; i++){
-        messageList[i] = (char *)malloc(50 * sizeof(char));
-		fgets(messageList[i], 50, fp);
-		messageList[i][strcspn(messageList[i], "\n")] = '\0';
+        message_list[i] = (char *)malloc(50 * sizeof(char));
+		fgets(message_list[i], 50, fp);
+		message_list[i][strcspn(message_list[i], "\n")] = '\0';
 
 	} 
 	fclose(fp);
 	for(int i = 0 ; i < message_count ; i++){
-		printf("%s\n", messageList[i]);
+		printf("%s\n", message_list[i]);
 	}
 }
 
-void logger(char *receiveMsg, int flush_remaining){
+void logger(char *received_msg, int flush_remaining){
 
 	FILE *fp;
 	int i = 0, end = 0;
-	strcpy(log_buffer[curr_log_count++], receiveMsg);
+	strcpy(log_buffer[curr_log_count++], received_msg);
 	// determine if logging to file will take place
 	if (curr_log_count == LOG_BATCH_SIZE || flush_remaining){
 		printf("LOGGER:\tLogging into file...\n");
