@@ -78,18 +78,16 @@ void produce_msg(int sig){
 	
 	// avoid deadlock on alarm
 	if (pthread_mutex_trylock(&buffer_mutex) != 0){
-		alarm(10);
+		alarm(PRODUCE_MSG_INTERVAL);
 		return;
 	}
+
+	// create msg
+	struct msg_struct msg = create_msg(); 
 	
-	char message[278];
-	unsigned int sender = SENDER;
-		
-	sprintf(
-		message, 
-		"%d_%d_%d_%s",
-		sender, ip_to_aem[rand() % ip_count], (unsigned)time(NULL), message_list[rand() % message_count]
-	);
+	// format the message into a string
+	char message[MAX_MSG_LENGTH];
+	sprintf(message, "%d_%d_%ld_%s", msg.sender, msg.receiver, msg.ts, msg.payload);
 
 	if (count >= BUFFLENGTH){
 		count = 0;
@@ -99,8 +97,18 @@ void produce_msg(int sig){
 	strcpy(buff[count++], message);
 	logger(message, 0);
 		
-	// alarm(rand() % (5*60 + 1 - 60) + 60);
 	alarm(rand() % PRODUCE_MSG_RANGE + PRODUCE_MSG_INTERVAL);
 	
 	pthread_mutex_unlock(&buffer_mutex);	
+}
+
+struct msg_struct create_msg(){
+	struct msg_struct msg;
+	
+	msg.sender = SENDER;
+	msg.receiver = ip_to_aem[rand() % ip_count];
+	msg.ts = (unsigned)time(NULL);
+	strcpy(msg.payload, message_list[rand() % message_count]);
+
+	return msg;
 }
