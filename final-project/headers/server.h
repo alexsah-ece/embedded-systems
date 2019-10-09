@@ -6,7 +6,7 @@
 
 void server(void);
 void *client(void *);
-void *receiveMsg(void *newfd);
+void *received_msg(void *newfd);
 
 #endif
 

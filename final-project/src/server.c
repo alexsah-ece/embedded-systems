@@ -42,31 +42,27 @@ void server(void){
 			exit(EXIT_FAILURE); 
 		} 
 		printf("SERVER:\tConnection accepted...\n");
-		//printf("qawdqawd\n");
-		pthread_t receiveThread;
-		pthread_create(&receiveThread, NULL, receiveMsg, &newfd);
-		
-		i++;
-		if (i>=ip_count) i=0;
-		
+		pthread_t received_msg_thread;
+		pthread_create(&received_msg_thread, NULL, received_msg, &newfd);
+
 	}
 	
 }
 
-void *receiveMsg(void *newfd){
+void *received_msg(void *newfd){
 	int *temp = (int *) newfd;
 	int sock = *temp;
 
 	printf("SERVER:\tWaiting for message\n");
 	pthread_mutex_unlock(&fd_mutex);
 
-	char receivedMsg[278];
+	char msg[MAX_MSG_LENGTH];
 
-	recv(sock, receivedMsg, sizeof(receivedMsg), 0);
-	printf("SERVER:\tProcessing message:%s\n", receivedMsg);
+	recv(sock, msg, sizeof(msg), 0);
+	printf("SERVER:\tProcessing message:%s\n", msg);
 
 	int i,doubleMsg,endIndex;
-	while (strcmp(receivedMsg,"Exit")!=0){
+	while (strcmp(msg,"Exit")!=0){
 		doubleMsg=0;
 		if (count>=BUFFLENGTH){
 			count=0;
@@ -81,7 +77,7 @@ void *receiveMsg(void *newfd){
 		}
 		
 		for (i=0; i<endIndex; i++){
-			if (strcmp(receivedMsg, buff[i])==0){
+			if (strcmp(msg, buff[i])==0){
 				doubleMsg=1;
 				break;
 			}
@@ -89,13 +85,13 @@ void *receiveMsg(void *newfd){
 		
 		if (doubleMsg==0){
 			pthread_mutex_lock(&buffer_mutex);
-			strcpy(buff[count], receivedMsg);
-			logger(receivedMsg, 0);
+			strcpy(buff[count], msg);
+			logger(msg, 0);
 			count++;
 			pthread_mutex_unlock(&buffer_mutex);
 		}
 		send(sock,"OK",strlen("OK")+1,0);
-		recv(sock, receivedMsg, sizeof(receivedMsg), 0);
+		recv(sock, msg, sizeof(msg), 0);
 	}
 	for (int i=0; i<count;i++){
 		printf("\t%s\n",buff[i]);
