@@ -3,6 +3,7 @@ SHELL := /bin/bash
 # ==================================================
 # COMMANDS
 
+# CC = arm-linux-gnueabihf-gcc
 CC = gcc
 RM = rm -f
 MKDIR = mkdir -p
