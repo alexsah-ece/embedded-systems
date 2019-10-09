@@ -7,8 +7,8 @@ void *client(void *param){
     serv_addr.sin_family = AF_INET; 
     serv_addr.sin_port = htons(CLIENT_SENT_PORT); 
     
-	int j=0;
-	while (j<ip_count){
+	int j = 0;
+	while (j< ip_count){
 		printf("CLIENT:\tTrying new connection..\n");
 		if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
 		{ 
@@ -29,10 +29,12 @@ void *client(void *param){
 
 		}
 		close(sock);
-		j++;
-		if (j == ip_count){
+
+		// when all ips have been tried, start again 
+		if (++j == ip_count){
 			j = 0;
-			sleep(10);
+			// wait until the next try
+			sleep(CLIENT_CONNECTION_ATTEMPT_PERIOD);
 		}
 	}
 	
@@ -98,7 +100,7 @@ void produce_msg(int sig){
 	logger(message, 0);
 		
 	// alarm(rand() % (5*60 + 1 - 60) + 60);
-	alarm(rand() % 10 + 1);
+	alarm(rand() % PRODUCE_MSG_RANGE + PRODUCE_MSG_INTERVAL);
 	
 	pthread_mutex_unlock(&buffer_mutex);	
 }
