@@ -45,7 +45,7 @@ void send_messages(int sock, int receiver){
 	int last_msg_index = last_msg_sent_index[receiver];
 	char *last_msg = last_msg_sent[receiver];
 
-	int endIndex = count;
+	int endIndex = count - 1;
 	if(endIndex >= BUFFLENGTH){
 		endIndex = 0;
 	}
@@ -58,7 +58,7 @@ void send_messages(int sock, int receiver){
 				last_msg_index = 0;
 			}
 
-			if (send(sock, buff[last_msg_index], strlen(buff[last_msg_index])+1, 0) == -1){
+			if (send(sock, buff[last_msg_index], strlen(buff[last_msg_index]) + 1, 0) == -1){
 				break;
 			};
 			recv(sock, ack,sizeof(ack),0);
